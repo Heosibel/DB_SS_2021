@@ -1131,7 +1131,153 @@ Ziele:
     \end{figure}
 
 \section{Anfrageverarbeitung}
+\begin{itemize}
+    \item Ziel: Optimierung der Anfrage durch effiziente Anfrageauswertung
+    \item Vorgehen: Verwendung der relationalen Algebra zur Standardisierung des SQL Ausdrucks
+    \item Operatorbaum:
+    
+    \begin{itemize}
+        \item Darstellungsform für Ausdrücke der relationalen Algebra
+        \item Erstellung von unten nach oben
+        \item in Blätter sind die Relationen, innere Knoten enthalten Operationen und Kanten
+    \end{itemize}
+    
+    \item kanonischer Operatorbaum: direkte Ableitung aus einer SQL Abfrage
+\end{itemize}
 
+    \subsection{Äquivalenzerhaltende Transformationsregeln}
+    \begin{enumerate}
+        \item Aufbrechen von Konjuktionen im Selektionsprädikat
+        \begin{itemize}
+            \item $\sigma_{C1 \wedge C2 \wedge ... \wedge Cn}(R) \equiv \sigma_{C1} ( \sigma_{C2} (... (\sigma_{C3}(R))...))$
+        \end{itemize}
+        
+        \item $\sigma$ ist kommutativ
+        \begin{itemize}
+            \item $\sigma_{C1}(\sigma_{C2}(R)) \equiv \sigma_{C2}(\sigma_{C1}(R))$
+        \end{itemize}
+        
+        \item $\pi$-Kaskaden: Falls $L_1 \subseteq L_2 \subseteq ... \subseteq L_n$ dann gilt
+        \begin{itemize}
+            \item $\pi_{L_1} ( \pi_{L_2} ( ... (\pi_{L_n}(R)) ... )) \equiv \pi_{L_1} (R) $
+        \end{itemize}
+        
+        \item Vertauschen von $\sigma$ und $\pi$
+        \begin{itemize}
+            \item Selektion darf sich nur auf die Attribute $A_1, ... , A_n$ der Projektionsliste beziehen
+            \item $\pi_{A_1, ... , A_n} (\sigma_{C1})R)) \equiv (\sigma_{C1}(\pi_{A_1, ... , A_n}(R))$
+        \end{itemize}
+        
+        \item $\times, \cap , \cup$ und $\bowtie$ sind kommutativ
+        \begin{itemize}
+            \item $R \times S \equiv S \times R$
+            \item $R \cap S \equiv S \cap R$
+            \item $R \cup S \equiv S \cup R$
+            \item $R \bowtie_C S \equiv S \bowtie_C R$
+        \end{itemize}
+        
+        \item Vertauschen von $\sigma$ und $\bowtie$
+        \begin{itemize}
+            \item Falls das Selektionsprädikat c nur auf Attribute von R zugreift: $\sigma_C (R \bowtie S) \equiv \sigma_C(R) \bowtie S$
+            \item Falls das Selektionsprädikat c eine Konjunktion der Form $c_1 \wedge c_2$ ist und $c_1$ sich nur auf Attribute von R und $c_2$ nur auf Attribute von S bezieht: $\sigma_C (R \bowtie S) \equiv \sigma_{C_1}(R) \bowtie \sigma_{C_2}(S)$
+        \end{itemize}
+        
+        \item Vertauschen von $\pi$ mit $\bowtie$
+        \begin{itemize}
+            \item Projektionsliste L sei \{$A_1,...,A_n,B_1,...,B_m$\}, Attribute $A_i$ sind aus R und $B_i$ aus S :  \\ 
+            $\pi_L (R \bowtie_C S) \equiv (\pi_{A_1,...,A_n}(R)) \bowtie (\pi_{B_1,...,B_m}(S))$
+            \item Bezieht sich der Join auf weitere Attribute in R $A_1',...,A_p'$ und $B_1',...,B_q'$ aus S müssen diese erhalten bleiben: \\
+            $\pi_L (R \bowtie_C S \equiv \pi_L (\pi_{A_1,...,A_n,A_1',...,A_p'}(R)) \bowtie (\pi_{B_1,...,B_m,B_1',...,B_q'}(S))$
+        \end{itemize}
+        
+        \item Operationen $\bowtie, \times, \cap,$ und $\cup$ sind jeweils assoziativ. $\Phi$ bezeichnet einen dieser Operatoren: \\
+        $(R \Phi S) \Phi T \equiv R \Phi (S \Phi T)$
+        
+        \item Operation $\sigma$ ist distributiv  mit $\cap, \cup, -$. $\Phi$ bezeihcnet einen dieser Operatoren: \\
+        $\sigma_C (R \Phi S) \equiv (\sigma_C(R))\Phi(\sigma_C(S))$
+        \item Operation $\pi$ ist distributiv mit $\cup$: $\pi_C (R \cup S) \equiv (\pi_C(R))\cup(\pi_C(S))$
+        \item De Morgan's Regeln gelten für Join und Selektionsprädikate: $\lnot (c_1 \land c_2) \equiv (\lnot c_1) \lor (\lnot c_2)$
+        \item kartesisches Produkt gefolgt von Selektions-Operation deren Attribute aus beiden Operanden des kartesischen Produktes enthält kann zum Join umgeformt werden : $\sigma_C (R \times S) \equiv R \bowtie_C S$
+    \end{enumerate}
 
+    \subsection{Optimierung des Operationsbaumes}
+    \begin{enumerate}
+        \item konjunktive Selektionsprädikate in Kaskaden von $\sigma -$Operationen zerlegen (Regel 1)
+        \item Selektionsoperationen so weit wie möglich nach unten propagieren (Regel 2,4,6,9)
+        \item vertauschen der Blattknoten sodass kleine Zwischenergebnisse entstehen (Regel 8)
+        \item Umformung der X-Operationen gefolgt von eine $\sigma -$Operation in eine Join um
+        \item Projektionen nach unten propagieren (Regel 3,4,7,10)
+        \item Zusammenfassung von Operationsfolgen (Regel 1,3)
+    \end{enumerate}
+
+\subsection{Physische Anfrageoptimierung}
+    \subsubsection{Anpassung der Daten}
+    \begin{itemize}
+        \item Basisrelation
+        \begin{itemize}
+            \item Beispielrelationen sind in einer Datei gespeichert
+            \item zusätzliche Indexdateien
+            \item ablegen der Datei nach einem Hashverfahren
+        \end{itemize}
+        
+        \item Zwischenergebnisse
+        \begin{itemize}
+            \item Wahlfreiheit der Dateiorganisation
+            \item einfügen von zusätzlichen Operatoren z.B. Sortierung, Index-Generierung
+        \end{itemize}
+    \end{itemize}
+    
+    \subsubsection{Anpassung Operanden}
+    \begin{itemize}
+        \item Zuordnung von konkreter Implementierung (Algorithmen) zu den Operatoren
+        \item Zuordnung der Operatoren auf den Blättern richtet sich nach der statischen vorgegebenen Dateiorganisation
+    \end{itemize}
+    
+    \subsubsection{Verarbeitungsvarianten}
+    \begin{itemize}
+        \item Materialisierung: jeder Knoten wird vollständig abgearbeitet und dann weiter gereicht
+        \item Fließverarbeitung (Pipeline)
+        \begin{itemize}
+            \item jeder Operator leitet jedes Ergebnistupel sofort an sein übergeordneten Operator weiter
+            \item Problem: langsamstes Glied bestimmt die Geschwindigkeit (Pufferung erforderlich)
+            \item Pipeline Breaker
+            \begin{itemize}
+                \item Unäre Operationen: Sortierung, Duplikatelimination
+                \item Binäre Operationen: Mengendifferenz
+                \item Join, Union (je nach Implementation)
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+    
+    \subsubsection{Iteratorkonzept}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=7cm]{images/iteratorKonzept.png}
+        \caption{Iteratorenkonzept}
+        \label{fig:Iteratorenkonzept}
+    \end{figure}
+    
+    \subsubsection{Selektion und Projektion}
+    \begin{itemize}
+        \item Planoperatoren für Projektion
+        \begin{itemize}
+            \item Spalteneleminierung (meist kombiniert mit Sortierung, Selektion oder Verbund)
+            \item Duplikateneleminierung durch Gruppierung
+        \end{itemize}
+        
+        \item Planoperatoren zur Selektion
+        \begin{itemize}
+            \item Nutzung des Scan-Operators
+            \item Relationen-Scan
+            \item Index-Scan
+            \item Auswahl kostengünstigster Index
+        \end{itemize}
+    \end{itemize}
+    
+    \subsubsection{Nested-Loop Verbund}
+    \subsubsection{Sort-Merge Verbund}
+    \subsubsection{Hash-Verbund - Classic Hashing}
+
+\subsection{Kostenbasierte Auswahl}
 
 \end{document}
