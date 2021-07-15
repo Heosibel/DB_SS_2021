@@ -28,6 +28,7 @@
     Dieses Dokument enthält eine Zusammenfassung der Vorlesung Datenbanken vom SS 2021.
     Diese Dokument ist kein offizielles vom Lehrstuhl und sollte nicht als Referenz verwendet werden.
     Die Erstellung ist in Vorbereitung auf die Prüfung im SS 2021 aus den Folien geschehen und kann Ungenauigkeit und/oder Fehler enthalten!
+    Alle Rechte der Bilder liegen bei dem Lehrstuhl und dem Lehrenden.
 \end{center}
 
 
@@ -1275,9 +1276,137 @@ Ziele:
     \end{itemize}
     
     \subsubsection{Nested-Loop Verbund}
+    \begin{itemize}
+        \item Sätze in R und S sind nicht sortiert
+        \item Verwendung eines beliebigen Join Prädikat (z.B. $= , \le , > , < , \dots$ )
+        \item jeder Satz in R muss mit S verglichen werden $\to$ Komplextiät: $O(N^2)$
+    \end{itemize}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=5cm]{images/nestedLoop.png}
+        \caption{Nested Loop Veranschaulichung}
+        \label{fig:nestedLoop}
+    \end{figure}
+    
     \subsubsection{Sort-Merge Verbund}
+    \begin{itemize}
+        \item es existieren Indexstrukturen $I_R(VA) , I_S(VA)$
+        \item nur verwendung von Gleichheit als Prädikat
+        \item Komplexität: $O(N \log N)$
+        \item Algorithmus: 
+        \begin{enumerate}
+            \item Sortierung von R und S nach den Indexstrukturen
+            \item Schrittweiser Scan über die Relationen
+        \end{enumerate}
+        \item Es müssen nicht alle Elemente verglichen werden, da bei einer gößerem Element als das aktuell gestoppt werden kann
+    \end{itemize}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=5cm]{images/Sort-Merge.png}
+        \caption{Sort Merge Verbund Veranschaulichung}
+        \label{fig:SortMerge}
+    \end{figure}
+    
     \subsubsection{Hash-Verbund - Classic Hashing}
-
+    \begin{enumerate}
+        \item Schritt:
+        \begin{itemize}
+            \item lesen der kleineren Relation
+            \item Aufbau einer Hashfunktion $h_A(R.VA)$
+            \item Aufteilen in p Abschnitte, sodass jeder Abschnitt in den Hauptspeicher passt
+        \end{itemize}
+        
+        \item Schritt:
+        \begin{itemize}
+            \item Scan über S
+            \item Überprüfen für jeden Satz von S mit $P_S$
+            \item Erfolg $\to$ Durchführung Verbund
+        \end{itemize}
+        \item Schritt: Wiederholen von 1. Schritt und 2. Schritt
+    \end{enumerate}
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=5cm]{images/HashVerbund.png}
+        \caption{Hash Verbund Veranschaulichung}
+        \label{fig:HashVerbund}
+    \end{figure}
+    
 \subsection{Kostenbasierte Auswahl}
-
+    \subsubsection{Optimierungskriterien}
+    \begin{itemize}
+        \item Benötigt eine Kostenfunktion
+        \item Schätzt die Gesamtkosten der Anfrage anhand der Kostenabschätzungen der Einzeloperationen
+        \item wichtige Rolle Selektivitätsabschätzungen
+    \end{itemize}
+    
+    \subsubsection{Optimierung}
+    \begin{itemize}
+        \item für jeden Kandidaten-Auswertungsplan müssen die Kosten abgeschätzt werden
+        \item Suche nach schnell einschränkenden Optimierungsverfahren ohne viele Lösungen zu verlieren
+    \end{itemize}
+    
+    \subsubsection{Kostenmodell}
+    \begin{itemize}
+        \item Basis Kostenschätzung eines Anfrageplans
+        \item Operatiorspezifische Kostenmodelle
+        \item Verwendung von Statistiken bzw. Schätzungen
+        \item Arten von Kosten
+        \begin{itemize}
+            \item Berechnungskosten: CPU Kosten, Pfadlängen
+            \item E/A Kosten: Anzahl Seitenreferenzen
+            \item Speicherkosten: Temporäre Allokation
+            \item Kommunikationskosten: Anzahl der Nachrichten
+        \end{itemize}
+    \end{itemize}
+    
+    \subsubsection{Join-Reihenfolge}
+    \begin{itemize}
+        \item Beobachtung: Verbundoperationen dominieren in praktischen Anfragen
+        \item Optimierung: 
+        \begin{itemize}
+            \item Gesucht: äquivalente und effiziente Folgen von 2 Wege-Joins $\to$ Ausnutzung Parallelität
+            \item Beschränkung auf lineare Folgen von Operatorbäumen zur Reduzierung des Aufwandes (left oder right deep tree)
+        \end{itemize}
+    \end{itemize}
+    
+    \subsubsection{Join-Bäume}
+    Veranschaulichung der verschieden Arten von Bäumen. Bevorzugt werden die Left oder Right-Deep-Trees. (siehe Figure: \ref{fig:joinBaeume})
+    \begin{figure}[!htp]
+        \centering
+        \includegraphics[width=15cm]{images/joinBaeume.png}
+        \caption{Klassen von Join-Bäumen}
+        \label{fig:joinBaeume}
+    \end{figure}
+    
+    \subsubsection{Greedy-Suche}
+    \begin{itemize}
+        \item keine Garantie das der optimale Plan gefunden wird
+        \item Vorteil: Anzahl der Pläne ist sehr gering
+        \item Ablauf:
+        \begin{enumerate}
+            \item Berechnung der Ergebnisgrößen des Join aller Relationen miteinander
+            \item Auswahl des besten Ergebnisses
+            \item erneute Berechnung der Ergebnissgrößen mit den restlichen Relationen
+            \item Wiederholung bis keine Relation mehr übrig ist
+        \end{enumerate}
+    \end{itemize}
+    
+    \begin{figure}[htp]
+        \centering
+        \includegraphics[width=15cm]{images/greedySearch.png}
+        \caption{ersten 2 Schritte zur Veranschaulichung}
+        \label{fig:greedySearch}
+    \end{figure}
+    
+    \subsubsection{Dynamisches Programmieren}
+     \begin{itemize}
+         \item Problem: greedy Ansatz findet nicht immer den besten globalen Anfrageplan
+         \item Lösung: Bellmannsches Optimalitätsprinzip: Lösung besteht aus den optimalen Lösungen seiner Teilprobleme
+         \item Grundlegender Ansatz:
+         \begin{itemize}
+             \item teilen des Problems in abhängige Teilprobleme
+             \item finden der Lösung für diese Teile
+             \item Kombinierung der einzelnene Teilprobleme 
+         \end{itemize}
+     \end{itemize}
 \end{document}
